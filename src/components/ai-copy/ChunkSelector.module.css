@@ -1,0 +1,68 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.actions {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.actionBtn {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.actionBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.chunk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.chunk:hover {
+  background: var(--bg-tertiary);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.level {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.empty {
+  padding: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 12px;
+}
