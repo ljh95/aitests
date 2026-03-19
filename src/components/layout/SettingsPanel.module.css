@@ -133,3 +133,93 @@
 .shortcut span {
   color: var(--text-secondary);
 }
+
+.storageMode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.modeLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.modeBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modeBadge[data-mode="vault"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.modeBadge[data-mode="local"] {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.noteCount {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.unsupported {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.themeLabel {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.themeSwitch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.themeSwitch[data-active="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.themeSwitchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--text-bright);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.themeSwitch[data-active="true"] .themeSwitchKnob {
+  transform: translateX(22px);
+  background: #fff;
+}

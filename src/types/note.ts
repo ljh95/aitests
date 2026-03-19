@@ -9,6 +9,7 @@ export interface Note {
   createdAt: string
   updatedAt: string
   isPinned: boolean
+  folderPath?: string
 }
 
 export interface PromptTemplate {
