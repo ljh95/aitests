@@ -1,8 +1,8 @@
 .header {
   display: flex;
   align-items: center;
-  height: var(--header-height);
-  padding: 0 12px;
+  height: calc(var(--header-height) + var(--safe-area-top));
+  padding: var(--safe-area-top) 12px 0;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   gap: 12px;
