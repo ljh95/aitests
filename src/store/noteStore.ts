@@ -79,10 +79,10 @@ export const useNoteStore = create<NoteState>((set, get) => ({
 
     const folders = await backend.listFolders()
 
-    // Start polling if filesystem
-    const fsBackend = storageManager.getFileSystemBackend()
-    if (fsBackend) {
-      fsBackend.startPolling((updatedNotes) => {
+    // Start polling if filesystem (web or native)
+    const vaultBackend = storageManager.getVaultBackend()
+    if (vaultBackend && 'startPolling' in vaultBackend) {
+      vaultBackend.startPolling((updatedNotes) => {
         set({ notes: updatedNotes })
       })
     }
@@ -160,9 +160,9 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       const notes = await backend.loadAllNotes()
       const folders = await backend.listFolders()
 
-      const fsBackend = storageManager.getFileSystemBackend()
-      if (fsBackend) {
-        fsBackend.startPolling((updatedNotes) => {
+      const vaultBackend = storageManager.getVaultBackend()
+      if (vaultBackend && 'startPolling' in vaultBackend) {
+        vaultBackend.startPolling((updatedNotes) => {
           set({ notes: updatedNotes })
         })
       }
@@ -194,12 +194,12 @@ export const useNoteStore = create<NoteState>((set, get) => ({
 
   migrateToFilesystem: async () => {
     const currentNotes = get().notes
-    const fsBackend = storageManager.getFileSystemBackend()
-    if (!fsBackend) throw new Error('Filesystem backend not available')
+    const vaultBackend = storageManager.getVaultBackend()
+    if (!vaultBackend) throw new Error('Filesystem backend not available')
 
     let count = 0
     for (const note of currentNotes) {
-      await fsBackend.saveNote(note)
+      await vaultBackend.saveNote(note)
       count++
     }
     return count
