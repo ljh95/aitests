@@ -6,6 +6,79 @@
   color: var(--text-primary);
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.langToggle {
+  display: flex;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.langBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.langBtn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.langBtnActive {
+  background: var(--accent);
+  color: #fff;
+}
+
+.langBtnActive:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.translateBtn,
+.retranslateBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.translateBtn:hover,
+.retranslateBtn:hover {
+  opacity: 0.85;
+}
+
+.translateBtn:disabled,
+.retranslateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.retranslateBtn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
 .title {
   font-size: 28px;
   font-weight: 700;

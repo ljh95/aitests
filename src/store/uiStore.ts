@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 type ViewMode = 'edit' | 'preview'
 type Theme = 'dark' | 'light'
+export type PreviewLang = 'original' | 'korean' | 'bilingual'
 
 const isMobile = () => window.innerWidth <= 768
 
@@ -10,6 +11,7 @@ interface UIState {
   viewMode: ViewMode
   aiCopyPanelOpen: boolean
   theme: Theme
+  previewLang: PreviewLang
 
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
@@ -18,6 +20,7 @@ interface UIState {
   setAICopyPanelOpen: (open: boolean) => void
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
+  setPreviewLang: (lang: PreviewLang) => void
 }
 
 function getInitialTheme(): Theme {
@@ -36,6 +39,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   viewMode: 'edit',
   aiCopyPanelOpen: false,
   theme: initialTheme,
+  previewLang: 'original' as PreviewLang,
 
   toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -52,4 +56,5 @@ export const useUIStore = create<UIState>((set, get) => ({
     const next = get().theme === 'dark' ? 'light' : 'dark'
     get().setTheme(next)
   },
+  setPreviewLang: (lang) => set({ previewLang: lang }),
 }))

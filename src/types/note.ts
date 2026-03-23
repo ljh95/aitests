@@ -10,6 +10,7 @@ export interface Note {
   updatedAt: string
   isPinned: boolean
   folderPath?: string
+  translatedContent?: string
 }
 
 export interface PromptTemplate {
