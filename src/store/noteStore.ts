@@ -67,7 +67,19 @@ export const useNoteStore = create<NoteState>((set, get) => ({
 
   hydrate: async () => {
     backend = await storageManager.getBackend()
-    let notes = await backend.loadAllNotes()
+
+    let notes: Note[]
+    let folders: string[]
+    try {
+      notes = await backend.loadAllNotes()
+      folders = await backend.listFolders()
+    } catch (e) {
+      // Filesystem backend failed (e.g. directory no longer exists) — fall back to localStorage
+      console.warn('Storage backend failed, falling back to localStorage:', e)
+      backend = await storageManager.switchToLocalStorage()
+      notes = await backend.loadAllNotes()
+      folders = await backend.listFolders()
+    }
 
     if (notes.length === 0 && backend.type === 'localStorage') {
       const seeds = seedNotes()
@@ -76,8 +88,6 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       }
       notes = seeds
     }
-
-    const folders = await backend.listFolders()
 
     // Start polling if filesystem (web or native)
     const vaultBackend = storageManager.getVaultBackend()
