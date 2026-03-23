@@ -301,6 +301,127 @@
   font-size: 10.5px;
 }
 
+/* Platform Tabs */
+
+.platformTabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.platformTab {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.platformTab + .platformTab {
+  border-left: 1px solid var(--border);
+}
+
+.platformTab[data-active="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.platformTab:not([data-active="true"]):hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.currentBadge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.platformTab:not([data-active="true"]) .currentBadge {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+}
+
+/* Sync Overview */
+
+.syncOverview {
+  margin-bottom: 12px;
+}
+
+.syncDesc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.syncDesc code {
+  background: var(--bg-input);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* Step Cards */
+
+.stepCard {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepBody strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.stepBody p {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
 .guideDivider {
   height: 1px;
   background: var(--border);

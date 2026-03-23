@@ -10,6 +10,8 @@ import {
 } from '@/lib/export'
 import styles from './SettingsPanel.module.css'
 
+type SyncPlatform = 'web' | 'android'
+
 interface Props {
   onClose: () => void
 }
@@ -26,6 +28,10 @@ export default function SettingsPanel({ onClose }: Props) {
   const [migrating, setMigrating] = useState(false)
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [showSyncGuide, setShowSyncGuide] = useState(false)
+
+  const isNative = storageManager.isNativeFileSystemSupported()
+  const detectedPlatform: SyncPlatform = isNative ? 'android' : 'web'
+  const [syncTab, setSyncTab] = useState<SyncPlatform>(detectedPlatform)
 
   const isVaultSupported = storageManager.isVaultSupported()
 
@@ -180,20 +186,20 @@ export default function SettingsPanel({ onClose }: Props) {
               <>
                 {isVaultSupported ? (
                   <button className={styles.actionBtn} onClick={handleOpenVault}>
-                    {storageManager.isNativeFileSystemSupported()
-                      ? 'Enable Vault (Documents/KAB)'
-                      : 'Open Vault Folder'}
+                    {isNative
+                      ? 'Vault 활성화 (Documents/KAB)'
+                      : 'Vault 폴더 선택'}
                   </button>
                 ) : (
                   <p className={styles.unsupported}>
-                    Vault mode requires Chrome, Edge, or a native app.
+                    Vault 모드는 Chrome, Edge 또는 네이티브 앱이 필요합니다.
                   </p>
                 )}
               </>
             ) : (
               <>
                 <button className={styles.actionBtn} onClick={handleDisconnectVault}>
-                  Disconnect Vault
+                  Vault 연결 해제
                 </button>
               </>
             )}
@@ -223,7 +229,7 @@ export default function SettingsPanel({ onClose }: Props) {
             onClick={() => setShowSyncGuide(!showSyncGuide)}
           >
             <h3 className={styles.sectionTitle} style={{ marginBottom: 0 }}>
-              Cloud Sync Guide
+              Google Drive Sync
             </h3>
             <span className={styles.guideToggle}>
               {showSyncGuide ? '\u25B2' : '\u25BC'}
@@ -232,113 +238,158 @@ export default function SettingsPanel({ onClose }: Props) {
 
           {showSyncGuide && (
             <div className={styles.guideContent}>
-              <div className={styles.guideBlock}>
-                <h4 className={styles.guideSubtitle}>
-                  PC/Mac — Web에서 Vault 설정
-                </h4>
-                <ol className={styles.guideSteps}>
-                  <li>
-                    <a
-                      href="https://www.google.com/drive/download/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className={styles.guideLink}
-                    >
-                      Google Drive 데스크톱 앱
-                    </a>
-                    을 설치하세요.
-                  </li>
-                  <li>
-                    설치 후 내 PC에 Google Drive 폴더가 생깁니다.
-                    <br />
-                    <span className={styles.guidePath}>
-                      Mac: ~/Google Drive/ &nbsp;|&nbsp; Win: G:\My Drive\
-                    </span>
-                  </li>
-                  <li>
-                    그 안에 노트 전용 폴더를 만드세요.
-                    <br />
-                    <span className={styles.guidePath}>
-                      예: Google Drive/KAB-Vault/
-                    </span>
-                  </li>
-                  <li>
-                    이 앱의 Settings &gt; Storage &gt;{' '}
-                    <strong>Open Vault Folder</strong> 클릭 후
-                    방금 만든 폴더를 선택하세요.
-                  </li>
-                  <li>
-                    노트가 <code>.md</code> 파일로 저장되고,
-                    Google Drive가 자동으로 클라우드에 동기화합니다.
-                  </li>
-                </ol>
+              <div className={styles.platformTabs}>
+                <button
+                  className={styles.platformTab}
+                  data-active={syncTab === 'android'}
+                  onClick={() => setSyncTab('android')}
+                >
+                  Android
+                  {detectedPlatform === 'android' && (
+                    <span className={styles.currentBadge}>현재</span>
+                  )}
+                </button>
+                <button
+                  className={styles.platformTab}
+                  data-active={syncTab === 'web'}
+                  onClick={() => setSyncTab('web')}
+                >
+                  PC / Web
+                  {detectedPlatform === 'web' && (
+                    <span className={styles.currentBadge}>현재</span>
+                  )}
+                </button>
               </div>
 
-              <div className={styles.guideDivider} />
+              {syncTab === 'android' && (
+                <div className={styles.guideBlock}>
+                  <div className={styles.syncOverview}>
+                    <p className={styles.syncDesc}>
+                      Vault 폴더를 Google Drive와 자동 동기화하여
+                      PC에서 작성한 노트를 휴대폰에서도 확인할 수 있습니다.
+                    </p>
+                  </div>
 
-              <div className={styles.guideBlock}>
-                <h4 className={styles.guideSubtitle}>
-                  Android — 휴대폰에서 동기화
-                </h4>
-                <ol className={styles.guideSteps}>
-                  <li>
-                    이 앱의 Settings &gt; Storage &gt;{' '}
-                    <strong>Enable Vault</strong>를 눌러
-                    Vault 모드를 활성화하세요.
-                    <br />
-                    <span className={styles.guidePath}>
-                      저장 위치: 내 파일/Documents/KAB/
-                    </span>
-                  </li>
-                  <li>
-                    Play Store에서{' '}
-                    <strong>FolderSync</strong> 앱을 설치하세요.
-                    <br />
-                    <span className={styles.guideNote}>
-                      (무료 버전으로 충분합니다)
-                    </span>
-                  </li>
-                  <li>
-                    FolderSync 앱을 열고 <strong>Accounts</strong> 탭에서
-                    Google Drive 계정을 추가하세요.
-                  </li>
-                  <li>
-                    <strong>Folderpairs</strong> 탭에서 새 동기화 쌍을 만드세요:
-                    <div className={styles.guideTable}>
-                      <div className={styles.guideTableRow}>
-                        <span className={styles.guideTableLabel}>동기화 유형</span>
-                        <span className={styles.guideTableValue}>양방향 (Two-way)</span>
-                      </div>
-                      <div className={styles.guideTableRow}>
-                        <span className={styles.guideTableLabel}>원격 폴더</span>
-                        <span className={styles.guideTableValue}>Google Drive/KAB-Vault/</span>
-                      </div>
-                      <div className={styles.guideTableRow}>
-                        <span className={styles.guideTableLabel}>로컬 폴더</span>
-                        <span className={styles.guideTableValue}>/Documents/KAB/</span>
-                      </div>
-                      <div className={styles.guideTableRow}>
-                        <span className={styles.guideTableLabel}>동기화 주기</span>
-                        <span className={styles.guideTableValue}>15분 (또는 원하는 주기)</span>
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>1</div>
+                    <div className={styles.stepBody}>
+                      <strong>Vault 활성화</strong>
+                      <p>
+                        위 Storage 섹션에서 <strong>Enable Vault</strong>를 눌러
+                        Vault 모드를 켜세요.
+                      </p>
+                      <span className={styles.guidePath}>
+                        저장 위치: 내 파일/Documents/KAB/
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>2</div>
+                    <div className={styles.stepBody}>
+                      <strong>Autosync for Google Drive 설치</strong>
+                      <p>
+                        Play Store에서{' '}
+                        <strong>Autosync for Google Drive</strong>를
+                        설치하고 Google 계정으로 로그인하세요.
+                      </p>
+                      <span className={styles.guideNote}>
+                        무료 버전으로 충분합니다 (폴더 1쌍 동기화 지원)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>3</div>
+                    <div className={styles.stepBody}>
+                      <strong>동기화 폴더 연결</strong>
+                      <p>Autosync에서 새 동기화 쌍을 추가하세요:</p>
+                      <div className={styles.guideTable}>
+                        <div className={styles.guideTableRow}>
+                          <span className={styles.guideTableLabel}>로컬 폴더</span>
+                          <span className={styles.guideTableValue}>/Documents/KAB/</span>
+                        </div>
+                        <div className={styles.guideTableRow}>
+                          <span className={styles.guideTableLabel}>Drive 폴더</span>
+                          <span className={styles.guideTableValue}>KAB-Vault/</span>
+                        </div>
+                        <div className={styles.guideTableRow}>
+                          <span className={styles.guideTableLabel}>동기화 방식</span>
+                          <span className={styles.guideTableValue}>양방향 (Two-way)</span>
+                        </div>
                       </div>
                     </div>
-                  </li>
-                  <li>
-                    저장 후 <strong>Sync</strong> 버튼을 눌러 첫 동기화를 실행하세요.
-                  </li>
-                  <li>
-                    이제 이 앱을 열면 PC에서 작성한 노트가 자동으로 보입니다.
-                  </li>
-                </ol>
-              </div>
+                  </div>
 
-              <div className={styles.guideDivider} />
+                  <p className={styles.guideTip}>
+                    설정 완료 후 Autosync가 백그라운드에서 자동으로
+                    Google Drive와 동기화합니다.
+                    PC에서 작성한 노트가 자동으로 휴대폰에 반영됩니다.
+                  </p>
+                </div>
+              )}
 
-              <p className={styles.guideTip}>
-                PC에서 노트를 수정하면 Google Drive가 자동 동기화하고,
-                FolderSync가 주기적으로 휴대폰에 반영합니다.
-                즉시 확인하려면 FolderSync에서 수동 Sync를 누르세요.
-              </p>
+              {syncTab === 'web' && (
+                <div className={styles.guideBlock}>
+                  <div className={styles.syncOverview}>
+                    <p className={styles.syncDesc}>
+                      Google Drive 데스크톱 앱으로 Vault 폴더를 자동 동기화하세요.
+                      노트가 <code>.md</code> 파일로 저장되어 어디서든 접근 가능합니다.
+                    </p>
+                  </div>
+
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>1</div>
+                    <div className={styles.stepBody}>
+                      <strong>Google Drive 데스크톱 설치</strong>
+                      <p>
+                        <a
+                          href="https://www.google.com/drive/download/"
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.guideLink}
+                        >
+                          Google Drive 데스크톱 앱
+                        </a>
+                        을 설치하면 내 PC에 Drive 폴더가 생깁니다.
+                      </p>
+                      <span className={styles.guidePath}>
+                        Mac: ~/Google Drive/ &nbsp;|&nbsp; Win: G:\My Drive\
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>2</div>
+                    <div className={styles.stepBody}>
+                      <strong>Vault 폴더 생성</strong>
+                      <p>
+                        Google Drive 안에 노트 전용 폴더를 만드세요.
+                      </p>
+                      <span className={styles.guidePath}>
+                        예: Google Drive/KAB-Vault/
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.stepCard}>
+                    <div className={styles.stepNumber}>3</div>
+                    <div className={styles.stepBody}>
+                      <strong>Vault 연결</strong>
+                      <p>
+                        위 Storage 섹션에서{' '}
+                        <strong>Open Vault Folder</strong>를 클릭하고
+                        방금 만든 폴더를 선택하세요.
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className={styles.guideTip}>
+                    노트를 저장하면 Google Drive가 자동으로 클라우드에 동기화합니다.
+                    Android 앱에서도 같은 폴더를 연결하면 양방향 동기화됩니다.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
