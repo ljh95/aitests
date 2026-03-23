@@ -1,21 +1,23 @@
-const MYMEMORY_API = 'https://api.mymemory.translated.net/get'
-const MAX_CHUNK_LENGTH = 500
+const GOOGLE_TRANSLATE_URL = 'https://translate.googleapis.com/translate_a/single'
+const MAX_CHUNK_LENGTH = 4500
 
-interface TranslateResult {
-  translatedText: string
-  match: number
-}
-
-async function translateChunk(text: string, langPair = 'en|ko'): Promise<string> {
+async function translateChunk(text: string, source = 'en', target = 'ko'): Promise<string> {
   const trimmed = text.trim()
   if (!trimmed) return ''
 
-  const params = new URLSearchParams({ q: trimmed, langpair: langPair })
-  const res = await fetch(`${MYMEMORY_API}?${params}`)
+  const params = new URLSearchParams({
+    client: 'gtx',
+    sl: source,
+    tl: target,
+    dt: 't',
+    q: trimmed,
+  })
+
+  const res = await fetch(`${GOOGLE_TRANSLATE_URL}?${params}`)
   if (!res.ok) throw new Error(`Translation API error: ${res.status}`)
 
-  const data = await res.json() as { responseData: TranslateResult }
-  return data.responseData.translatedText
+  const data = await res.json() as [Array<[string, string]>]
+  return data[0].map(segment => segment[0]).join('')
 }
 
 function splitIntoParagraphs(content: string): string[] {
@@ -64,6 +66,8 @@ function extractTextFromMarkdown(paragraph: string): { prefix: string; text: str
 export async function translateContent(
   content: string,
   onProgress?: (progress: number) => void,
+  source = 'en',
+  target = 'ko',
 ): Promise<string> {
   const paragraphs = splitIntoParagraphs(content)
   const translated: string[] = []
@@ -89,7 +93,7 @@ export async function translateContent(
       const translatedChunks: string[] = []
 
       for (const chunk of chunks) {
-        const result = await translateChunk(chunk)
+        const result = await translateChunk(chunk, source, target)
         translatedChunks.push(result)
       }
 
@@ -99,7 +103,7 @@ export async function translateContent(
       const translatedChunks: string[] = []
 
       for (const chunk of chunks) {
-        const result = await translateChunk(chunk)
+        const result = await translateChunk(chunk, source, target)
         translatedChunks.push(result)
       }
 
