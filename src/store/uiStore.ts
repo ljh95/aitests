@@ -3,6 +3,7 @@ import { create } from 'zustand'
 type ViewMode = 'edit' | 'preview'
 type Theme = 'dark' | 'light'
 export type PreviewLang = 'original' | 'korean' | 'bilingual'
+type SidebarView = 'category' | 'folder'
 
 const isMobile = () => window.innerWidth <= 768
 
@@ -12,6 +13,7 @@ interface UIState {
   aiCopyPanelOpen: boolean
   theme: Theme
   previewLang: PreviewLang
+  sidebarView: SidebarView
 
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
@@ -21,6 +23,7 @@ interface UIState {
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setPreviewLang: (lang: PreviewLang) => void
+  setSidebarView: (view: SidebarView) => void
 }
 
 function getInitialTheme(): Theme {
@@ -40,6 +43,13 @@ export const useUIStore = create<UIState>((set, get) => ({
   aiCopyPanelOpen: false,
   theme: initialTheme,
   previewLang: 'original' as PreviewLang,
+  sidebarView: ((): SidebarView => {
+    try {
+      const saved = localStorage.getItem('kab_sidebar_view')
+      if (saved === 'category' || saved === 'folder') return saved
+    } catch {}
+    return 'category'
+  })(),
 
   toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -57,4 +67,8 @@ export const useUIStore = create<UIState>((set, get) => ({
     get().setTheme(next)
   },
   setPreviewLang: (lang) => set({ previewLang: lang }),
+  setSidebarView: (view) => {
+    try { localStorage.setItem('kab_sidebar_view', view) } catch {}
+    set({ sidebarView: view })
+  },
 }))

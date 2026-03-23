@@ -7,6 +7,36 @@
   overflow: hidden;
 }
 
+.viewToggle {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.viewBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.viewBtnActive {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+}
+
 .list {
   flex: 1;
   overflow-y: auto;
