@@ -1,6 +1,6 @@
 import type { Note } from '@/types/note'
 import type { StorageBackend } from './types'
-import { serializeNote, parseNoteFile, noteToFilename } from './frontmatter'
+import { serializeNote, parseNoteFile, noteToFilename, noteToTranslationFilename } from './frontmatter'
 import { saveDirectoryHandle } from './handleStore'
 
 /** Maps note ID → { handle, dirHandle, filename } for quick lookups */
@@ -56,20 +56,29 @@ export class FileSystemBackend implements StorageBackend {
       ? await this.getOrCreateDir(this.rootHandle, folderPath)
       : this.rootHandle
 
-    // If filename changed or folder changed, delete old file
+    // If filename changed or folder changed, delete old file and its translation sidecar
     if (existing && (existing.filename !== newFilename || existing.folderPath !== folderPath)) {
-      try {
-        await existing.dirHandle.removeEntry(existing.filename)
-      } catch {
-        // Old file may already be gone
-      }
+      try { await existing.dirHandle.removeEntry(existing.filename) } catch {}
+      const oldKo = existing.filename.replace(/\.md$/, '.ko.md')
+      try { await existing.dirHandle.removeEntry(oldKo) } catch {}
     }
 
-    // Write the new file
+    // Write the main .md file
     const fileHandle = await targetDir.getFileHandle(newFilename, { create: true })
     const writable = await fileHandle.createWritable()
     await writable.write(serializeNote(note))
     await writable.close()
+
+    // Write or remove translation sidecar (.ko.md)
+    const koFilename = noteToTranslationFilename(note)
+    if (note.translatedContent) {
+      const koHandle = await targetDir.getFileHandle(koFilename, { create: true })
+      const koWritable = await koHandle.createWritable()
+      await koWritable.write(note.translatedContent)
+      await koWritable.close()
+    } else {
+      try { await targetDir.removeEntry(koFilename) } catch {}
+    }
 
     // Update file map
     this.fileMap.set(note.id, { dirHandle: targetDir, filename: newFilename, folderPath })
@@ -82,11 +91,9 @@ export class FileSystemBackend implements StorageBackend {
   async deleteNote(id: string): Promise<void> {
     const entry = this.fileMap.get(id)
     if (!entry) return
-    try {
-      await entry.dirHandle.removeEntry(entry.filename)
-    } catch {
-      // File may already be deleted
-    }
+    try { await entry.dirHandle.removeEntry(entry.filename) } catch {}
+    const koFilename = entry.filename.replace(/\.md$/, '.ko.md')
+    try { await entry.dirHandle.removeEntry(koFilename) } catch {}
     this.fileMap.delete(id)
   }
 
@@ -167,13 +174,21 @@ export class FileSystemBackend implements StorageBackend {
     notes: Note[],
   ): Promise<void> {
     for await (const entry of dirHandle.values()) {
-      if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+      if (entry.kind === 'file' && entry.name.endsWith('.md') && !entry.name.endsWith('.ko.md')) {
         try {
           const fileHandle = await dirHandle.getFileHandle(entry.name)
           const file = await fileHandle.getFile()
           const text = await file.text()
           const note = parseNoteFile(text)
           note.folderPath = folderPath
+
+          // Load translation sidecar if exists
+          const koFilename = entry.name.replace(/\.md$/, '.ko.md')
+          try {
+            const koHandle = await dirHandle.getFileHandle(koFilename)
+            const koFile = await koHandle.getFile()
+            note.translatedContent = await koFile.text()
+          } catch { /* no translation file */ }
 
           notes.push(note)
           this.fileMap.set(note.id, { dirHandle, filename: entry.name, folderPath })
@@ -249,7 +264,7 @@ export class FileSystemBackend implements StorageBackend {
     paths: Set<string>,
   ): Promise<void> {
     for await (const entry of dirHandle.values()) {
-      if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+      if (entry.kind === 'file' && entry.name.endsWith('.md') && !entry.name.endsWith('.ko.md')) {
         const fullPath = folderPath ? `${folderPath}/${entry.name}` : entry.name
         paths.add(fullPath)
         try {
@@ -257,11 +272,32 @@ export class FileSystemBackend implements StorageBackend {
           const file = await fileHandle.getFile()
           const lastKnown = this.lastScanMap.get(fullPath)
 
-          // Only parse if file is new or modified
-          if (lastKnown === undefined || file.lastModified > lastKnown) {
+          // Also check if translation sidecar changed
+          let koChanged = false
+          const koFilename = entry.name.replace(/\.md$/, '.ko.md')
+          const koFullPath = folderPath ? `${folderPath}/${koFilename}` : koFilename
+          try {
+            const koHandle = await dirHandle.getFileHandle(koFilename)
+            const koFile = await koHandle.getFile()
+            const koLastKnown = this.lastScanMap.get(koFullPath)
+            if (koLastKnown === undefined || koFile.lastModified > koLastKnown) {
+              koChanged = true
+              this.lastScanMap.set(koFullPath, koFile.lastModified)
+            }
+          } catch { /* no translation file */ }
+
+          if (lastKnown === undefined || file.lastModified > lastKnown || koChanged) {
             const text = await file.text()
             const note = parseNoteFile(text)
             note.folderPath = folderPath
+
+            // Load translation sidecar
+            try {
+              const koHandle = await dirHandle.getFileHandle(koFilename)
+              const koFile = await koHandle.getFile()
+              note.translatedContent = await koFile.text()
+            } catch { /* no translation file */ }
+
             notes.push(note)
             this.lastScanMap.set(fullPath, file.lastModified)
           }

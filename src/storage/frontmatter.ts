@@ -34,6 +34,11 @@ export function parseNoteFile(raw: string, fallbackId?: string): Note {
   return { id, title, content, category, tags, createdAt, updatedAt, isPinned }
 }
 
+/** Generate a translation sidecar filename (.ko.md) from a note */
+export function noteToTranslationFilename(note: Note): string {
+  return noteToFilename(note).replace(/\.md$/, '.ko.md')
+}
+
 /** Generate a filesystem-safe filename from a note */
 export function noteToFilename(note: Note): string {
   if (!note.title || note.title.trim() === '') {

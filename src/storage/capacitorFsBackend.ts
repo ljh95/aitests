@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 import type { Note } from '@/types/note'
 import type { StorageBackend } from './types'
-import { serializeNote, parseNoteFile, noteToFilename } from './frontmatter'
+import { serializeNote, parseNoteFile, noteToFilename, noteToTranslationFilename } from './frontmatter'
 
 const VAULT_DIR = 'KAB'
 
@@ -51,6 +51,20 @@ export class CapacitorFsBackend implements StorageBackend {
       encoding: Encoding.UTF8,
     })
 
+    // Write or remove translation sidecar (.ko.md)
+    const koFilename = noteToTranslationFilename(note)
+    const koPath = `${dirPath}/${koFilename}`
+    if (note.translatedContent) {
+      await Filesystem.writeFile({
+        path: koPath,
+        data: note.translatedContent,
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+      })
+    } else {
+      try { await Filesystem.deleteFile({ path: koPath, directory: Directory.Documents }) } catch {}
+    }
+
     this.lastScanMap.set(folderPath ? `${folderPath}/${filename}` : filename, Date.now())
   }
 
@@ -66,14 +80,9 @@ export class CapacitorFsBackend implements StorageBackend {
       ? `${this.vaultPath}/${folderPath}`
       : this.vaultPath
 
-    try {
-      await Filesystem.deleteFile({
-        path: `${dirPath}/${filename}`,
-        directory: Directory.Documents,
-      })
-    } catch {
-      // File may already be deleted
-    }
+    try { await Filesystem.deleteFile({ path: `${dirPath}/${filename}`, directory: Directory.Documents }) } catch {}
+    const koFilename = noteToTranslationFilename(note)
+    try { await Filesystem.deleteFile({ path: `${dirPath}/${koFilename}`, directory: Directory.Documents }) } catch {}
   }
 
   async listFolders(): Promise<string[]> {
@@ -175,7 +184,7 @@ export class CapacitorFsBackend implements StorageBackend {
       })
 
       for (const entry of result.files) {
-        if (entry.type === 'file' && entry.name.endsWith('.md')) {
+        if (entry.type === 'file' && entry.name.endsWith('.md') && !entry.name.endsWith('.ko.md')) {
           try {
             const filePath = `${dirPath}/${entry.name}`
             const file = await Filesystem.readFile({
@@ -186,6 +195,19 @@ export class CapacitorFsBackend implements StorageBackend {
             const text = typeof file.data === 'string' ? file.data : ''
             const note = parseNoteFile(text)
             note.folderPath = folderPath || undefined
+
+            // Load translation sidecar if exists
+            const koPath = `${dirPath}/${entry.name.replace(/\.md$/, '.ko.md')}`
+            try {
+              const koFile = await Filesystem.readFile({
+                path: koPath,
+                directory: Directory.Documents,
+                encoding: Encoding.UTF8,
+              })
+              const koText = typeof koFile.data === 'string' ? koFile.data : ''
+              if (koText) note.translatedContent = koText
+            } catch { /* no translation file */ }
+
             notes.push(note)
 
             const relativePath = folderPath ? `${folderPath}/${entry.name}` : entry.name
@@ -217,6 +239,7 @@ export class CapacitorFsBackend implements StorageBackend {
 
       for (const entry of result.files) {
         if (entry.type === 'file' && entry.name.endsWith('.md')) {
+          // .ko.md changes also trigger rescan
           const relativePath = folderPath ? `${folderPath}/${entry.name}` : entry.name
           const lastKnown = this.lastScanMap.get(relativePath)
           const mtime = entry.mtime || 0

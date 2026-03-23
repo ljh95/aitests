@@ -8,6 +8,7 @@ import {
   downloadFile,
   readFileAsText,
 } from '@/lib/export'
+import { getApiKey, setApiKey } from '@/utils/geminiService'
 import styles from './SettingsPanel.module.css'
 
 type SyncPlatform = 'web' | 'android'
@@ -28,6 +29,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const [migrating, setMigrating] = useState(false)
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [showSyncGuide, setShowSyncGuide] = useState(false)
+  const [geminiKey, setGeminiKey] = useState(getApiKey())
+  const [showKey, setShowKey] = useState(false)
 
   const isNative = storageManager.isNativeFileSystemSupported()
   const detectedPlatform: SyncPlatform = isNative ? 'android' : 'web'
@@ -391,6 +394,46 @@ export default function SettingsPanel({ onClose }: Props) {
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Gemini API</h3>
+          <p className={styles.storageText} style={{ marginBottom: 8 }}>
+            이미지, PDF, 음성, 비디오, YouTube를 마크다운으로 변환하려면 Gemini API 키가 필요합니다.
+          </p>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input
+              className={styles.apiKeyInput}
+              type={showKey ? 'text' : 'password'}
+              placeholder="Gemini API Key"
+              value={geminiKey}
+              onChange={(e) => {
+                setGeminiKey(e.target.value)
+                setApiKey(e.target.value)
+              }}
+              style={{
+                flex: 1,
+                padding: '6px 10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                color: 'var(--text-primary)',
+                fontSize: 12,
+              }}
+            />
+            <button
+              className={styles.actionBtn}
+              onClick={() => setShowKey(!showKey)}
+              style={{ padding: '6px 10px', fontSize: 11 }}
+            >
+              {showKey ? '숨기기' : '보기'}
+            </button>
+          </div>
+          {geminiKey && (
+            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#22c55e' }}>
+              API 키 설정됨
+            </p>
           )}
         </div>
 

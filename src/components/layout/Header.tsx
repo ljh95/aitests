@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useNoteStore } from '@/store/noteStore'
 import { useUIStore } from '@/store/uiStore'
 import SettingsPanel from './SettingsPanel'
+import NewNoteMenu from './NewNoteMenu'
 import styles from './Header.module.css'
 
 export default function Header() {
-  const createNote = useNoteStore((s) => s.createNote)
   const searchQuery = useNoteStore((s) => s.searchQuery)
   const setSearch = useNoteStore((s) => s.setSearch)
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
@@ -51,9 +51,7 @@ export default function Header() {
           <button className={styles.modeBtn} onClick={toggleViewMode}>
             {viewMode === 'edit' ? 'Preview' : 'Edit'}
           </button>
-          <button className={styles.newBtn} onClick={() => createNote()}>
-            + New
-          </button>
+          <NewNoteMenu />
           <button className={styles.iconBtn} onClick={() => setSettingsOpen(true)} title="Settings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
